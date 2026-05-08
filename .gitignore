@@ -1,0 +1,12 @@
+# Root ignores
+node_modules/
+.env
+
+# Client ignores
+client/node_modules/
+client/dist/
+
+# Server ignores
+server/node_modules/
+server/.env
+server/test_index.js
