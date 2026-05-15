@@ -8,5 +8,5 @@ client/dist/
 
 # Server ignores
 server/node_modules/
-server/.env
+server/.env.example
 server/test_index.js
