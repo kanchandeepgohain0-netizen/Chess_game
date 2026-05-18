@@ -1,17 +1,7 @@
 .container {
   min-height: 100vh;
-  background: #1a2332;
-  background-image: 
-    repeating-linear-gradient(
-      45deg,
-      rgba(100, 120, 140, 0.05),
-      rgba(100, 120, 140, 0.05) 10px,
-      transparent 10px,
-      transparent 20px
-    );
   display: flex;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .header {

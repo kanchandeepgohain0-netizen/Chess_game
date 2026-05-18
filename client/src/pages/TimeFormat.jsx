@@ -9,8 +9,8 @@ function TimeFormat({ navigateTo }) {
       id: 'classical',
       name: 'Classical',
       icon: '♜',
-      time: '10 min',
-      description: 'Full game with 10 minutes per player',
+      time: 'Unlimited',
+      description: 'Play without time constraints',
       details: 'Best for strategic play'
     },
     {
@@ -25,8 +25,8 @@ function TimeFormat({ navigateTo }) {
       id: 'blitz',
       name: 'Blitz',
       icon: '♝',
-      time: '2 min',
-      description: 'Quick matches with 2 minutes per player',
+      time: '3 min',
+      description: 'Quick matches with 3 minutes per player',
       details: 'Test your speed'
     }
   ];

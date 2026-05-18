@@ -48,7 +48,7 @@ export default function App() {
       case 'customRoom':
         return <CustomRoom navigateTo={navigateTo} />;
       case 'game':
-        return <Game navigateTo={navigateTo} />;
+        return <Game navigateTo={navigateTo} gameMode={gameMode} />;
       default:
         return isLoggedIn ? <Home navigateTo={navigateTo} /> : <Login navigateTo={navigateTo} />;
     }

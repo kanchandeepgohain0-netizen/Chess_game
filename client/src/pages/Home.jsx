@@ -70,7 +70,7 @@ function Home({ navigateTo }) {
       </main>
 
       <footer className={styles.footer}>
-        <p>ChessHub • Multiplayer Chess Platform</p>
+        <p></p>
       </footer>
     </div>
   );

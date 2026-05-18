@@ -6,6 +6,7 @@ function useChessGame() {
     const [board, setBoard] = useState(game.board());
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
+    const [turn, setTurn] = useState(game.turn());
 
     function onSquareClick(square) {
         if (selected === null) {
@@ -44,6 +45,7 @@ function useChessGame() {
             const move = game.move({ from: selected, to: square, promotion: "q" });
             if (move) {
                 setBoard(game.board());
+                setTurn(game.turn());
             }
             setSelected(null);
             setLegalMoves([]);
@@ -53,7 +55,8 @@ function useChessGame() {
     return {
         board,
         legalMoves,
-        onSquareClick
+        onSquareClick,
+        turn
     };
 }
 

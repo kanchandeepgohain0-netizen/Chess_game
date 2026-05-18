@@ -15,39 +15,24 @@
 } */
 
 .board {
-
     display: grid;
-
-    grid-template-columns: repeat(8, 80px);
-
-    grid-template-rows: repeat(8, 80px);
-
+    grid-template-columns: repeat(8, 100px);
+    grid-template-rows: repeat(8, 100px);
     width: fit-content;
-
-    border: 6px solid #333;
-
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-
+    border: 8px solid #2a2a2a;
+    border-radius: 4px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
 }
 
 .square {
-
-    width: 80px;
-
-    height: 80px;
-
+    width: 100px;
+    height: 100px;
     display: flex;
-
     justify-content: center;
-
     align-items: center;
-
-    font-size: 50px;
-
+    font-size: 70px;
     cursor: pointer;
-
-    transition: 0.2s;
-
+    transition: all 0.2s ease;
 }
 
 .square:hover {

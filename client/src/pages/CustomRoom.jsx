@@ -33,7 +33,7 @@ function CustomRoom({ navigateTo }) {
     <div className={styles.container}>
       <header className={styles.header}>
         <h2 className={styles.title}>Custom Room Lobby</h2>
-        <button 
+        <button
           className={styles.backButton}
           onClick={() => navigateTo('home')}
         >
@@ -73,7 +73,7 @@ function CustomRoom({ navigateTo }) {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3>Create Custom Room</h3>
-              <button 
+              <button
                 className={styles.modalClose}
                 onClick={() => setShowCreateModal(false)}
               >
@@ -114,7 +114,7 @@ function CustomRoom({ navigateTo }) {
                 <button type="submit" className={`${styles.submitButton} ${styles.create}`}>
                   Create & Enter
                 </button>
-                <button 
+                <button
                   type="button"
                   className={styles.cancelButton}
                   onClick={() => setShowCreateModal(false)}
@@ -133,7 +133,7 @@ function CustomRoom({ navigateTo }) {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3>Join Friend's Room</h3>
-              <button 
+              <button
                 className={styles.modalClose}
                 onClick={() => setShowJoinModal(false)}
               >
@@ -171,7 +171,7 @@ function CustomRoom({ navigateTo }) {
                 <button type="submit" className={`${styles.submitButton} ${styles.join}`}>
                   Join Match
                 </button>
-                <button 
+                <button
                   type="button"
                   className={styles.cancelButton}
                   onClick={() => setShowJoinModal(false)}
