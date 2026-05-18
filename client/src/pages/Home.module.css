@@ -1,0 +1,243 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: rgba(20, 30, 40, 0.8);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(184, 134, 11, 0.3);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+}
+
+@keyframes titlePulse {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(184, 134, 11, 0.5)); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8)); }
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+  background: linear-gradient(45deg, #b8860b, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+.profileSection {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 24px;
+  background: rgba(184, 134, 11, 0.15);
+  border: 2px solid rgba(184, 134, 11, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profileSection:hover {
+  background: rgba(184, 134, 11, 0.25);
+  border-color: rgba(184, 134, 11, 0.8);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 15px rgba(184, 134, 11, 0.25);
+}
+
+.profileSection:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 4px rgba(184, 134, 11, 0.15);
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.profileElo {
+  font-size: 14px;
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.profileAvatar {
+  font-size: 32px;
+  transition: transform 0.3s ease;
+}
+
+.profileSection:hover .profileAvatar {
+  transform: scale(1.1) rotate(10deg);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.mainContent {
+  text-align: center;
+  max-width: 900px;
+}
+
+@keyframes slideDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcomeText {
+  font-size: 36px;
+  color: #e0e0e0;
+  margin: 0 0 50px 0;
+  font-weight: 600;
+  animation: slideDown 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.buttonsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.actionButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 30px 25px;
+  background: rgba(40, 50, 65, 0.8);
+  border: 2px solid rgba(184, 134, 11, 0.5);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-size: 16px;
+  font-weight: 600;
+  color: #e0e0e0;
+  animation: fadeUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.actionButton:active:not(:disabled) {
+  transform: translateY(2px) scale(0.98);
+}
+
+.actionButton:hover:not(:disabled) {
+  border-color: #ffd700;
+  background: rgba(50, 65, 85, 1);
+  box-shadow: 0 10px 25px rgba(184, 134, 11, 0.4);
+  transform: translateY(-8px) scale(1.03);
+}
+
+.actionButton.active {
+  border-color: #b8860b;
+  background: rgba(184, 134, 11, 0.15);
+}
+
+.actionButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(184, 134, 11, 0.2);
+}
+
+.buttonIcon {
+  font-size: 36px;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.actionButton:hover:not(:disabled) .buttonIcon {
+  transform: scale(1.2) translateY(-5px);
+}
+
+.buttonText {
+  font-size: 18px;
+}
+
+.buttonDesc {
+  font-size: 12px;
+  opacity: 0.6;
+  color: #a0a0a0;
+}
+
+.actionButton:hover:not(:disabled) .buttonDesc {
+  color: #b8860b;
+}
+.rankedButton {
+  animation-delay: 0.1s;
+}
+
+.customButton {
+  animation-delay: 0.2s;
+}
+
+.analyzeButton {
+  animation-delay: 0.3s;
+}
+
+.footer {
+  background: rgba(20, 30, 40, 0.8);
+  padding: 20px;
+  text-align: center;
+  color: #a0a0a0;
+  font-size: 13px;
+  border-top: 1px solid rgba(184, 134, 11, 0.2);
+}
+
+.footer p {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .welcomeText {
+    font-size: 26px;
+    margin-bottom: 30px;
+  }
+
+  .buttonsGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .actionButton {
+    padding: 25px 20px;
+  }
+}

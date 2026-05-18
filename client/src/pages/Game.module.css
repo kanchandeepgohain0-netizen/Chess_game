@@ -1,0 +1,207 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  padding: 20px;
+}
+
+.quitButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background: rgba(40, 50, 65, 0.8);
+  color: #e0e0e0;
+  border: 1px solid rgba(184, 134, 11, 0.4);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.quitButton:hover {
+  background: rgba(40, 50, 65, 1);
+  border-color: #b8860b;
+  transform: translateX(-3px);
+}
+
+.gameWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background: rgba(20, 30, 40, 0.6);
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 15px;
+  background: rgba(40, 50, 65, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(184, 134, 11, 0.2);
+}
+
+.playerAvatar {
+  width: 48px;
+  height: 48px;
+  background: rgba(26, 35, 50, 0.8);
+  border: 2px solid #b8860b;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.playerDetails {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.playerName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.playerElo {
+  font-size: 14px;
+  color: #ffd700;
+  font-weight: 600;
+  margin: 0;
+}
+
+.boardContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.playerTimer {
+  font-size: 22px;
+  font-weight: 700;
+  color: #e0e0e0;
+  background: rgba(20, 30, 40, 0.8);
+  padding: 8px 15px;
+  border-radius: 6px;
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  margin-left: auto;
+  font-family: 'Courier New', Courier, monospace;
+  transition: all 0.3s ease;
+}
+
+.playerTimer.active {
+  color: #ffd700;
+  border-color: #ffd700;
+  background: rgba(40, 50, 65, 0.9);
+  box-shadow: 0 0 15px rgba(184, 134, 11, 0.25);
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.modalContent {
+  background: rgba(40, 50, 65, 0.95);
+  border: 2px solid rgba(184, 134, 11, 0.5);
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  width: 100%;
+  padding: 30px;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+  color: #e0e0e0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modalTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  color: #b8860b;
+}
+
+.modalWarning {
+  font-size: 15px;
+  color: #e0e0e0;
+  margin: 0 0 25px 0;
+  line-height: 1.5;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.modalButton {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.cancelBtn {
+  background: transparent;
+  color: #e0e0e0;
+  border: 1px solid rgba(184, 134, 11, 0.4);
+}
+
+.cancelBtn:hover {
+  background: rgba(184, 134, 11, 0.1);
+  border-color: #b8860b;
+}
+
+.confirmBtn {
+  background: rgba(220, 38, 38, 0.8);
+  color: white;
+  border: 1px solid #ef4444;
+}
+
+.confirmBtn:hover {
+  background: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+}

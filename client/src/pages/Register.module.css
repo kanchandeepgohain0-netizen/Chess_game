@@ -1,0 +1,150 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.formCard {
+  background: rgba(40, 50, 65, 0.9);
+  border: 2px solid rgba(184, 134, 11, 0.5);
+  border-radius: 15px;
+  padding: 50px 40px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  text-align: center;
+  color: #b8860b;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #e0e0e0;
+  text-align: center;
+  margin: 0 0 35px 0;
+  font-weight: 500;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #b8860b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input {
+  padding: 12px 15px;
+  background: rgba(60, 70, 85, 0.6);
+  border: 1px solid rgba(184, 134, 11, 0.4);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #e0e0e0;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: #808080;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #b8860b;
+  background: rgba(60, 70, 85, 0.8);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.15);
+}
+
+.errorMessage {
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.submitButton {
+  padding: 14px 20px;
+  background: rgba(184, 134, 11, 0.8);
+  border: 2px solid #b8860b;
+  border-radius: 8px;
+  color: #1a2332;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+}
+
+.submitButton:hover {
+  background: #b8860b;
+  box-shadow: 0 8px 25px rgba(184, 134, 11, 0.3);
+  transform: translateY(-2px);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+.divider {
+  height: 1px;
+  background: rgba(184, 134, 11, 0.3);
+  margin: 30px 0;
+}
+
+.switchText {
+  text-align: center;
+  color: #a0a0a0;
+  font-size: 13px;
+  margin: 0;
+}
+
+.switchLink {
+  background: none;
+  border: none;
+  color: #b8860b;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: underline;
+  font-size: 13px;
+  padding: 0;
+}
+
+.switchLink:hover {
+  color: #d4af37;
+  text-decoration: none;
+}
