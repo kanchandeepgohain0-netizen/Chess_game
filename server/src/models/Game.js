@@ -3,6 +3,12 @@ const mongoose = require('mongoose');
 const gameSchema = new mongoose.Schema({
   whitePlayer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   blackPlayer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+
+  winner: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+    default: null 
+  },
   
   format: { 
     type: String, 
@@ -30,5 +36,10 @@ const gameSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+gameSchema.index({ whitePlayer: 1 });
+gameSchema.index({ blackPlayer: 1 });
+gameSchema.index({ status: 1 });
+gameSchema.index({ winner: 1 });
 
 module.exports = mongoose.model('Game', gameSchema);

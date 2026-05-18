@@ -6,7 +6,7 @@ function generateRoomId() {
   for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return result;
+  return result; 
 }
 
 // Custom validator to ensure we don't exceed 4 spectators
