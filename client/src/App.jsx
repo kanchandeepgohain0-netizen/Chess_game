@@ -1,40 +1,42 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-
-// Import our page components
+import { useState } from 'react';
 import Home from './pages/Home';
+import Profile from './pages/Profile';
+import TimeFormat from './pages/TimeFormat';
 import Matchmaking from './pages/Matchmaking';
 import CustomRoom from './pages/CustomRoom';
-import Profile from './pages/Profile';
+import Game from './pages/Game';
 
-function App() {
+export default function App() {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [gameMode, setGameMode] = useState(null);
+
+  const navigateTo = (page, mode = null) => {
+    setCurrentPage(page);
+    if (mode) setGameMode(mode);
+  };
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <Home navigateTo={navigateTo} />;
+      case 'profile':
+        return <Profile navigateTo={navigateTo} />;
+      case 'timeFormat':
+        return <TimeFormat navigateTo={navigateTo} />;
+      case 'matchmaking':
+        return <Matchmaking navigateTo={navigateTo} gameMode={gameMode} />;
+      case 'customRoom':
+        return <CustomRoom navigateTo={navigateTo} />;
+      case 'game':
+        return <Game navigateTo={navigateTo} />;
+      default:
+        return <Home navigateTo={navigateTo} />;
+    }
+  };
+
   return (
-    <BrowserRouter>
-      <Routes>
-        
-        <Route path="/" element={<Home />} />
-        <Route path="/matchmaking" element={<Matchmaking />} />
-        <Route path="/custom-room" element={<CustomRoom />} />
-        <Route path="/profile" element={<Profile />} />
-
-      </Routes>
-    </BrowserRouter>
+    <div style={{ margin: 0, padding: 0 }}>
+      {renderPage()}
+    </div>
   );
-import React from "react";
-import ChessBoard from "./components/board/ChessBoard.jsx";
-import useChessGame from "./hooks/useChessGame";
-// import useSocket from "./hooks/useSocket";
-
-function App(){
-    // useSocket();
-    const{board, legalMoves, onSquareClick} = useChessGame();
-    return(
-        <ChessBoard
-        board={board}
-        legalMoves={legalMoves}
-        onSquareClick={onSquareClick}
-        />
-    )
 }
-}
-export default App;

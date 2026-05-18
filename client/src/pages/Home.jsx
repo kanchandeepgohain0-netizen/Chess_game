@@ -1,52 +1,77 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import styles from './Home.module.css';
 
-function Home() {
-  const navigate = useNavigate();
+function Home({ navigateTo }) {
+  const [hoveredButton, setHoveredButton] = useState(null);
+
+  const player = {
+    username: "Player_01",
+    elo: 1200
+  };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-      
-      {/* Header / Profile Section */}
-      <header className="w-full max-w-4xl flex justify-between items-center mb-12 p-4 bg-gray-800 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate('/')}>Chess Game</h1>
-        {/* We make the profile area clickable to go to the Profile page! */}
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerLeft}>
+          <h1 className={styles.title}>♟ ChessHub</h1>
+        </div>
         <div 
-          onClick={() => navigate('/profile')}
-          className="flex items-center gap-4 cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors"
+          className={styles.profileSection}
+          onClick={() => navigateTo('profile')}
+          role="button"
+          tabIndex="0"
         >
-          <div className="text-right">
-            <p className="font-semibold">Player_01</p>
-            <p className="text-sm text-yellow-400">1200 ELO</p>
+          <div className={styles.profileInfo}>
+            <span className={styles.profileName}>{player.username}</span>
+            <span className={styles.profileElo}>{player.elo}</span>
           </div>
-          <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-xl">
-            👤
-          </div>
+          <div className={styles.profileAvatar}>👤</div>
         </div>
       </header>
 
-      {/* Main Action Buttons */}
-      <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button 
-          onClick={() => navigate('/matchmaking')}
-          className="h-48 bg-blue-600 hover:bg-blue-500 rounded-xl text-2xl font-bold transition-all shadow-lg flex flex-col items-center justify-center gap-2"
-        >
-          <span>⚔️</span> Play Ranked
-        </button>
-        
-        {/* Both of these now send the user to the Custom Room lobby area */}
-        <button 
-          onClick={() => navigate('/custom-room')}
-          className="h-48 bg-green-600 hover:bg-green-500 rounded-xl text-2xl font-bold transition-all shadow-lg flex flex-col items-center justify-center gap-2"
-        >
-          <span>🚪</span> Custom Rooms
-        </button>
-        
-        <button 
-          className="h-48 bg-gray-700 hover:bg-gray-600 rounded-xl text-2xl font-bold transition-all shadow-lg flex flex-col items-center justify-center gap-2"
-        >
-          <span>📚</span> Tutorials
-        </button>
+      <main className={styles.main}>
+        <div className={styles.mainContent}>
+          <h2 className={styles.welcomeText}>Choose Your Game Mode</h2>
+          <div className={styles.buttonsGrid}>
+            <button
+              className={`${styles.actionButton} ${styles.rankedButton} ${hoveredButton === 'ranked' ? styles.active : ''}`}
+              onClick={() => navigateTo('timeFormat')}
+              onMouseEnter={() => setHoveredButton('ranked')}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              <span className={styles.buttonIcon}>⚔️</span>
+              <span className={styles.buttonText}>Play Ranked</span>
+              <span className={styles.buttonDesc}>Compete in rated games</span>
+            </button>
+
+            <button
+              className={`${styles.actionButton} ${styles.customButton} ${hoveredButton === 'custom' ? styles.active : ''}`}
+              onClick={() => navigateTo('customRoom')}
+              onMouseEnter={() => setHoveredButton('custom')}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              <span className={styles.buttonIcon}>🎮</span>
+              <span className={styles.buttonText}>Custom Room</span>
+              <span className={styles.buttonDesc}>Play with friends</span>
+            </button>
+
+            <button
+              className={`${styles.actionButton} ${styles.analyzeButton} ${hoveredButton === 'analyze' ? styles.active : ''}`}
+              disabled
+              onMouseEnter={() => setHoveredButton('analyze')}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              <span className={styles.buttonIcon}>📊</span>
+              <span className={styles.buttonText}>Analyze</span>
+              <span className={styles.buttonDesc}>Coming soon</span>
+            </button>
+          </div>
+        </div>
       </main>
+
+      <footer className={styles.footer}>
+        <p>ChessHub • Multiplayer Chess Platform</p>
+      </footer>
     </div>
   );
 }
