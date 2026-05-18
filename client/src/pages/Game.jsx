@@ -4,7 +4,7 @@ import useChessGame from "../hooks/useChessGame";
 import styles from "./Game.module.css";
 
 function Game({ navigateTo, gameMode }) {
-    const { board, legalMoves, onSquareClick, turn } = useChessGame();
+    const { board, legalMoves, onSquareClick, turn, isCheckmate, checkmateSquare } = useChessGame();
     const [showQuitModal, setShowQuitModal] = useState(false);
 
     // Timer state
@@ -29,15 +29,22 @@ function Game({ navigateTo, gameMode }) {
         if (!hasTimer) return;
 
         const timer = setInterval(() => {
+            if (isCheckmate) return;
             if (turn === 'w') {
-                setPlayerTime(prev => Math.max(0, prev - 1));
+                setPlayerTime(prev => {
+                    if (prev === 0) return 0;
+                    return prev - 1;
+                });
             } else {
-                setOpponentTime(prev => Math.max(0, prev - 1));
+                setOpponentTime(prev => {
+                    if (prev === 0) return 0;
+                    return prev - 1;
+                });
             }
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [turn, hasTimer]);
+    }, [turn, hasTimer, isCheckmate]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -63,6 +70,8 @@ function Game({ navigateTo, gameMode }) {
         elo: 1200,
         avatar: "👤"
     };
+
+    const winnerName = turn === 'w' ? opponent.name : player.name;
 
     return (
         <div className={styles.container}>
@@ -95,6 +104,7 @@ function Game({ navigateTo, gameMode }) {
                         board={board}
                         legalMoves={legalMoves}
                         onSquareClick={onSquareClick}
+                        checkmateSquare={checkmateSquare}
                     />
                 </div>
 
@@ -133,6 +143,32 @@ function Game({ navigateTo, gameMode }) {
                                 onClick={handleConfirmQuit}
                             >
                                 Confirm Quit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* End Game Modal */}
+            {(isCheckmate || playerTime === 0 || opponentTime === 0) && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <h3 className={styles.modalTitle}>
+                            {isCheckmate ? 'Checkmate!' : "Time's up!"}
+                        </h3>
+                        <p className={styles.modalWarning} style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+                            {isCheckmate
+                                ? `You lost by checkmate to ${winnerName}`
+                                : playerTime === 0
+                                ? "Time's up! You lost on time."
+                                : "Your opponent ran out of time. You won!"}
+                        </p>
+                        <div className={styles.modalButtons} style={{ justifyContent: 'center' }}>
+                            <button
+                                className={`${styles.modalButton} ${styles.confirmBtn}`}
+                                onClick={() => navigateTo('home')}
+                            >
+                                Return to Homepage
                             </button>
                         </div>
                     </div>
