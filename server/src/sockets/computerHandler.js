@@ -1,8 +1,6 @@
 const lastReq = new Map();
 
 module.exports = (io, socket) => {
-
-
   socket.on('computer_move', async ({ fen, depth = 12 }) => {
     try {
       const now = Date.now();

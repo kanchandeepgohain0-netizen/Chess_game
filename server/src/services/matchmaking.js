@@ -3,7 +3,7 @@ const Redis = require('ioredis');
 const { v4: uuidv4 } = require('uuid'); // We will use this to generate unique Game IDs
 
 // Create a new Redis connection specifically for our background services
-const redis = new Redis(process.env.REDIS_URI);
+const redis = new Redis(process.env.REDIS_URL);
 
 const QUEUE_KEY = 'matchmaking_queue';
 const ELO_FLEXIBILITY = 50; // Match players within 50 ELO points of each other
