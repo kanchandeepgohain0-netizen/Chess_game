@@ -153,9 +153,11 @@ function Game({ navigateTo, gameMode }) {
             }
         });
 
-        // Join the game socket room to receive board updates
+        // Join the game socket room (safety net for reconnects/refreshes)
         const activeGameId = localStorage.getItem('gameId');
         if (activeGameId) {
+            if (!socket.connected) socket.connect();
+            socket.emit('register_user', { userId: user.userId });
             socket.emit('join_game', { gameId: activeGameId });
         }
 
@@ -245,6 +247,7 @@ function Game({ navigateTo, gameMode }) {
                         legalMoves={legalMoves}
                         onSquareClick={onSquareClick}
                         checkmateSquare={checkmateSquare}
+                        playerColor={myColor}
                     />
                 </div>
 

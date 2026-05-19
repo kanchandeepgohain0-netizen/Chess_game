@@ -93,8 +93,10 @@ module.exports = (io, socket) => {
       const isWhite = userId === state.whitePlayer;
       const isBlack = userId === state.blackPlayer;
 
-      if (isWhiteTurn && !isWhite) return;
-      if (!isWhiteTurn && !isBlack) return;
+      console.log(`make_move event: userId=${userId}, move=${JSON.stringify(move)}, turn=${state.turn}, white=${state.whitePlayer}, black=${state.blackPlayer}`);
+
+      if (isWhiteTurn && !isWhite) { console.log('Rejected: Not white turn'); return; }
+      if (!isWhiteTurn && !isBlack) { console.log('Rejected: Not black turn'); return; }
 
       const chess = new Chess(state.fen);
       let result;
@@ -104,9 +106,11 @@ module.exports = (io, socket) => {
         result = null;
       }
       if (!result) {
+        console.log(`Rejected: Illegal move on server: ${JSON.stringify(move)}`);
         socket.emit('illegal_move', { move });
         return;
       }
+      console.log(`Server applied move: ${result.san}, FEN=${chess.fen()}`);
 
       const now = Date.now();
       const elapsed = now - state.lastMoveTimestamp;

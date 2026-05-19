@@ -1,14 +1,51 @@
+import { useState, useEffect } from 'react';
 import styles from './Profile.module.css';
 
 function Profile({ navigateTo }) {
-  const player = {
-    username: "Player_01",
-    uid: "A1B2C3D4E5F6",
+  const [player, setPlayer] = useState({
+    username: "Loading...",
+    uid: "...",
     elo: 1200,
     wins: 0,
     losses: 0,
     draws: 0
-  };
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return navigateTo('login');
+      
+      try {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5000'}/api/users/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (res.status === 401) {
+            localStorage.clear();
+            return navigateTo('login');
+        }
+        
+        if (res.ok) {
+          const data = await res.json();
+          setPlayer({
+            username: data.username,
+            uid: data._id,
+            elo: data.elo || 1200,
+            wins: data.wins || 0,
+            losses: data.losses || 0,
+            draws: data.draws || 0
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      }
+    };
+    
+    fetchProfile();
+  }, [navigateTo]);
 
   const totalGames = player.wins + player.losses + player.draws;
   const winRate = totalGames > 0 ? ((player.wins / totalGames) * 100).toFixed(1) : 0;

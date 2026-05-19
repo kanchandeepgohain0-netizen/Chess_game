@@ -29,25 +29,30 @@ function CustomRoom({ navigateTo }) {
         body: JSON.stringify({ password: createPassword, format: createFormat })
       });
       const data = await res.json();
+      if (res.status === 401) {
+        localStorage.clear();
+        navigateTo('login');
+        return;
+      }
       if (!res.ok) { setError(data.error || 'Failed to create room'); return; }
 
       localStorage.setItem('roomId', data.roomId);
       localStorage.setItem('myColor', 'white');
       localStorage.setItem('gameFormat', createFormat);
       localStorage.setItem('isBotGame', 'false');
+      localStorage.removeItem('gameId'); // clear any stale gameId
 
-      // Register user and join socket room to wait for opponent
+      // Ensure socket is connected before emitting
+      if (!socket.connected) socket.connect();
+
+      // Register user and join the room socket channel
       socket.emit('register_user', { userId: user.userId });
       socket.emit('join_room', { roomId: data.roomId, userId: user.userId });
 
-      socket.once('room_ready', ({ gameId, format }) => {
-        localStorage.setItem('gameId', gameId);
-        navigateTo('game', format || createFormat);
-      });
-
+      // Navigate immediately — Game.jsx will handle room_ready
       setShowCreateModal(false);
       setCreatePassword('');
-      alert(`Room created! Share this code: ${data.roomId}`);
+      navigateTo('game', createFormat);
     } catch (err) {
       setError('Network error. Please try again.');
     }
@@ -63,24 +68,33 @@ function CustomRoom({ navigateTo }) {
         body: JSON.stringify({ roomId: roomCode, password: joinPassword })
       });
       const data = await res.json();
+      if (res.status === 401) {
+        if (data.error === 'Incorrect room password.') {
+          setError(data.error);
+          return;
+        }
+        localStorage.clear();
+        navigateTo('login');
+        return;
+      }
       if (!res.ok) { setError(data.error || 'Failed to join room'); return; }
 
       localStorage.setItem('roomId', roomCode);
       localStorage.setItem('myColor', 'black');
       localStorage.setItem('isBotGame', 'false');
+      localStorage.removeItem('gameId'); // clear any stale gameId
+
+      // Ensure socket is connected before emitting
+      if (!socket.connected) socket.connect();
 
       socket.emit('register_user', { userId: user.userId });
       socket.emit('join_room', { roomId: roomCode, userId: user.userId });
 
-      socket.once('room_ready', ({ gameId, format }) => {
-        localStorage.setItem('gameId', gameId);
-        localStorage.setItem('gameFormat', format || 'rapid');
-        navigateTo('game', format || 'rapid');
-      });
-
+      // Navigate immediately — Game.jsx will handle room_ready
       setShowJoinModal(false);
       setRoomCode('');
       setJoinPassword('');
+      navigateTo('game', 'rapid');
     } catch (err) {
       setError('Network error. Please try again.');
     }

@@ -82,7 +82,13 @@ function useChessGame(playerColor = null, onMove = null) {
     }
 
     function applyMove(from, to, promotion = 'q') {
-        const move = game.move({ from, to, promotion });
+        let move;
+        try {
+            move = game.move({ from, to, promotion });
+        } catch (e) {
+            console.error("Move error:", e);
+            return false;
+        }
         if (!move) return false;
 
         const currentBoard = game.board();

@@ -16,7 +16,7 @@ function arrayLimit(val) {
 
 const roomSchema = new mongoose.Schema({
   roomId: { type: String, required: true, unique: true, default: generateRoomId },
-  password: { type: String, required: true },
+  password: { type: String, default: '' },
   format: { type: String, enum: ['classical', 'rapid', 'blitz'], default: 'rapid' },
   
   // The host of the room
