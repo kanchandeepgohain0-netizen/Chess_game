@@ -56,6 +56,17 @@ function Home({ navigateTo }) {
             </button>
 
             <button
+              className={`${styles.actionButton} ${styles.tutorialButton} ${hoveredButton === 'tutorial' ? styles.active : ''}`}
+              onClick={() => navigateTo('tutorial')}
+              onMouseEnter={() => setHoveredButton('tutorial')}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              <span className={styles.buttonIcon}>🎓</span>
+              <span className={styles.buttonText}>How to Play</span>
+              <span className={styles.buttonDesc}>Learn how pieces move</span>
+            </button>
+
+            <button
               className={`${styles.actionButton} ${styles.analyzeButton} ${hoveredButton === 'analyze' ? styles.active : ''}`}
               disabled
               onMouseEnter={() => setHoveredButton('analyze')}

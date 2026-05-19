@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ChessPiece({piece}){
+function ChessPiece({piece, mode}){
     const pieceSymbol ={
         wp: "♟",
         wr: "♜",
@@ -22,6 +22,7 @@ function ChessPiece({piece}){
     const pieceStyle = {
         color: isWhite ? '#ffffff' : '#111111',
         textShadow: isWhite ? '0 0 2px #000, 0 1px 4px rgba(0,0,0,0.8)' : '0 1px 2px rgba(255,255,255,0.4)',
+        transition: mode === 'tutorial' ? 'transform 0.4s ease' : 'none',
     };
 
     return(

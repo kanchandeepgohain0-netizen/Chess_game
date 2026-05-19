@@ -2,7 +2,7 @@ import React from 'react';
 import ChessSquare from './ChessSquare.jsx';
 import './ChessBoard.css';
 
-function ChessBoard({ board, legalMoves, onSquareClick, checkmateSquare }) {
+function ChessBoard({ board, legalMoves, onSquareClick, checkmateSquare, mode }) {
     return (
         <div className="board">
             {board.map((row, rowIndex) => (
@@ -20,8 +20,9 @@ function ChessBoard({ board, legalMoves, onSquareClick, checkmateSquare }) {
                             color={color}
                             isHighlighted={isHighlighted}
                             isCheckmateSquare={isCheckmateSquare}
-                            onClick={() => onSquareClick(squareName)}
+                            onClick={() => mode !== 'tutorial' && onSquareClick(squareName)}
                             piece={piece}
+                            mode={mode}
                         />
                     );
                 })

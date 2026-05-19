@@ -7,6 +7,7 @@ import CustomRoom from './pages/CustomRoom';
 import Game from './pages/Game';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Tutorial from './pages/Tutorial';
 
 
 export default function App() {
@@ -49,6 +50,8 @@ export default function App() {
         return <CustomRoom navigateTo={navigateTo} />;
       case 'game':
         return <Game navigateTo={navigateTo} gameMode={gameMode} />;
+      case 'tutorial':
+        return <Tutorial navigateTo={navigateTo} />;
       default:
         return isLoggedIn ? <Home navigateTo={navigateTo} /> : <Login navigateTo={navigateTo} />;
     }

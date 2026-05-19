@@ -1,0 +1,63 @@
+.botContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  margin-top: 20px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.botIcon {
+  font-size: 3rem;
+  background: var(--surface-light);
+  border-radius: 50%;
+  padding: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.speechBubble {
+  position: relative;
+  background: var(--surface-light);
+  padding: 20px;
+  border-radius: 15px;
+  border-bottom-left-radius: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  color: var(--text-primary);
+}
+
+.speechBubble::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  bottom: 0;
+  border-width: 0 10px 15px 0;
+  border-style: solid;
+  border-color: transparent var(--surface-light) transparent transparent;
+}
+
+.botText {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.nextButton {
+  align-self: flex-end;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nextButton:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}

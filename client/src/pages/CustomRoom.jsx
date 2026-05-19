@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import styles from './CustomRoom.module.css';
+import socket from '../services/socket';
 
 function CustomRoom({ navigateTo }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [error, setError] = useState('');
 
   // Create Room Form
   const [createFormat, setCreateFormat] = useState('classical');
@@ -14,19 +16,74 @@ function CustomRoom({ navigateTo }) {
   const [roomCode, setRoomCode] = useState('');
   const [joinPassword, setJoinPassword] = useState('');
 
-  const handleCreateRoom = (e) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = localStorage.getItem('token');
+
+  const handleCreateRoom = async (e) => {
     e.preventDefault();
-    console.log('[v0] Room created:', { createFormat, createPassword });
-    setShowCreateModal(false);
-    setCreatePassword('');
+    setError('');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5000'}/api/rooms/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ password: createPassword, format: createFormat })
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Failed to create room'); return; }
+
+      localStorage.setItem('roomId', data.roomId);
+      localStorage.setItem('myColor', 'white');
+      localStorage.setItem('gameFormat', createFormat);
+      localStorage.setItem('isBotGame', 'false');
+
+      // Register user and join socket room to wait for opponent
+      socket.emit('register_user', { userId: user.userId });
+      socket.emit('join_room', { roomId: data.roomId, userId: user.userId });
+
+      socket.once('room_ready', ({ gameId, format }) => {
+        localStorage.setItem('gameId', gameId);
+        navigateTo('game', format || createFormat);
+      });
+
+      setShowCreateModal(false);
+      setCreatePassword('');
+      alert(`Room created! Share this code: ${data.roomId}`);
+    } catch (err) {
+      setError('Network error. Please try again.');
+    }
   };
 
-  const handleJoinRoom = (e) => {
+  const handleJoinRoom = async (e) => {
     e.preventDefault();
-    console.log('[v0] Joining room:', { roomCode, joinPassword });
-    setShowJoinModal(false);
-    setRoomCode('');
-    setJoinPassword('');
+    setError('');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5000'}/api/rooms/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ roomId: roomCode, password: joinPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Failed to join room'); return; }
+
+      localStorage.setItem('roomId', roomCode);
+      localStorage.setItem('myColor', 'black');
+      localStorage.setItem('isBotGame', 'false');
+
+      socket.emit('register_user', { userId: user.userId });
+      socket.emit('join_room', { roomId: roomCode, userId: user.userId });
+
+      socket.once('room_ready', ({ gameId, format }) => {
+        localStorage.setItem('gameId', gameId);
+        localStorage.setItem('gameFormat', format || 'rapid');
+        navigateTo('game', format || 'rapid');
+      });
+
+      setShowJoinModal(false);
+      setRoomCode('');
+      setJoinPassword('');
+    } catch (err) {
+      setError('Network error. Please try again.');
+    }
   };
 
   return (
@@ -43,6 +100,7 @@ function CustomRoom({ navigateTo }) {
 
       <main className={styles.main}>
         <p className={styles.lobbySubtitle}>Create a room or join a friend's room</p>
+        {error && <p style={{ color: '#ff6060', textAlign: 'center', marginBottom: '12px', fontSize: '0.9rem' }}>{error}</p>}
 
         <div className={styles.roomButtons}>
           <button

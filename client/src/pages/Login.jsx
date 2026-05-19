@@ -1,36 +1,59 @@
 import { useState } from 'react';
 import styles from './Login.module.css';
+import socket from '../services/socket';
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function Login({ navigateTo }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email');
-      return;
-    }
+    if (!email || !password) { setError('Please fill in all fields'); return; }
+    if (!/\S+@\S+\.\S+/.test(email)) { setError('Please enter a valid email'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    // Store user data in localStorage
-    const userData = { email, username: email.split('@')[0] };
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('isLoggedIn', 'true');
-
+    setLoading(true);
     setError('');
-    navigateTo('home');
+
+    try {
+      const res = await fetch(`${SERVER_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Login failed');
+        return;
+      }
+
+      // Store everything the app needs — including userId and elo
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify({
+        userId: String(data.userId),   // MongoDB _id as string
+        username: data.username,
+        elo: data.elo ?? 1200
+      }));
+      localStorage.setItem('isLoggedIn', 'true');
+
+
+      if (!socket.connected) socket.connect();
+      socket.emit('register_user', { userId: String(data.userId) });
+
+      navigateTo('home');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Cannot reach the server. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,6 +75,7 @@ export default function Login({ navigateTo }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={styles.input}
+                disabled={loading}
               />
             </div>
 
@@ -64,11 +88,12 @@ export default function Login({ navigateTo }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={styles.input}
+                disabled={loading}
               />
             </div>
 
-            <button type="submit" className={styles.submitButton}>
-              Login
+            <button type="submit" className={styles.submitButton} disabled={loading}>
+              {loading ? 'Logging in…' : 'Login'}
             </button>
           </form>
 
@@ -76,10 +101,7 @@ export default function Login({ navigateTo }) {
 
           <p className={styles.switchText}>
             Don&apos;t have an account?{' '}
-            <button
-              onClick={() => navigateTo('register')}
-              className={styles.switchLink}
-            >
+            <button onClick={() => navigateTo('register')} className={styles.switchLink}>
               Register here
             </button>
           </p>
