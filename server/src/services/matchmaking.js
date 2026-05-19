@@ -1,45 +1,40 @@
-// server/src/services/matchmaking.js
-const Redis = require('ioredis');
-const { v4: uuidv4 } = require('uuid'); // We will use this to generate unique Game IDs
+const redis = require('../config/redis');
+const { v4: uuidv4 } = require('uuid');
 
-// Create a new Redis connection specifically for our background services
-const redis = new Redis(process.env.REDIS_URL);
+const QUEUE = 'matchmaking_queue';
+const BOT_PREFIX = 'bot_';
 
-const QUEUE_KEY = 'matchmaking_queue';
-const ELO_FLEXIBILITY = 50; // Match players within 50 ELO points of each other
-
-async function joinQueue(userId, elo) {
-    // 1. Add the player to the queue, sorted by their ELO
-    await redis.zadd(QUEUE_KEY, elo, userId);
-    console.log(`Player ${userId} (ELO: ${elo}) joined the queue.`);
-
-    // 2. Immediately check if there is a match waiting for them
-    return await checkForMatch(userId, elo);
+async function addToQueue(userId, elo, format) {
+  await redis.set(`format:${userId}`, format);
+  await redis.zadd(QUEUE, elo, userId);
+  await redis.set(`queue_time:${userId}`, Date.now());
 }
 
-async function checkForMatch(userId, elo) {
-    const minElo = elo - ELO_FLEXIBILITY;
-    const maxElo = elo + ELO_FLEXIBILITY;
+async function findOpponent(userId, elo) {
+  const candidates = await redis.zrangebyscore(QUEUE, elo - 50, elo + 50);
 
-    // 3. Find everyone in the queue within the ELO range
-    const potentialMatches = await redis.zrangebyscore(QUEUE_KEY, minElo, maxElo);
-
-    // 4. Look for an opponent who is NOT the current user
-    const opponentId = potentialMatches.find(id => id !== userId);
-
-    if (opponentId) {
-        console.log(`Match found! ${userId} vs ${opponentId}`);
-
-        // 5. Remove BOTH players from the queue so they don't get matched again
-        await redis.zrem(QUEUE_KEY, userId, opponentId);
-
-        // 6. Generate a unique Room ID for their game
-        const gameId = `game_${uuidv4()}`;
-        return { matchFound: true, gameId, opponentId };
-    }
-
-    // If no one is available, they stay in the queue
-    return { matchFound: false, message: "Waiting for opponent..." };
+  const opponent = candidates.find(id => id !== userId && !id.startsWith(BOT_PREFIX));
+  if (!opponent) return null;
+  const myFormat = await redis.get(`format:${userId}`);
+  const theirFormat = await redis.get(`format:${opponent}`);
+  return myFormat === theirFormat ? opponent : null;
 }
 
-module.exports = { joinQueue };
+async function findBotOpponent(elo) {
+  const botElo = Math.max(400, elo + Math.floor(Math.random() * 21) - 10);
+  const botId = `${BOT_PREFIX}${uuidv4()}`;
+  return { botId, botElo };
+}
+
+async function removeFromQueue(userId) {
+  await redis.zrem(QUEUE, userId);
+  await redis.del(`format:${userId}`);
+  await redis.del(`queue_time:${userId}`);
+}
+
+async function getQueueTime(userId) {
+  const time = await redis.get(`queue_time:${userId}`);
+  return time ? parseInt(time, 10) : null;
+}
+
+module.exports = { addToQueue, findOpponent, findBotOpponent, removeFromQueue, getQueueTime, BOT_PREFIX };

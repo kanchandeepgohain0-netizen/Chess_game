@@ -1,36 +1,43 @@
-const {createClient} = require('../config/redis');
+const redis = require('../config/redis');
 
+const TIMES = { classical: 5400000, rapid: 300000, blitz: 180000 };
 
-const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+async function initGameState(gameId, whiteId, blackId, format = 'rapid') {
+  const t = TIMES[format] || TIMES.rapid;
+  const now = Date.now();
+  await redis.hset(`game:${gameId}`, {
+    whitePlayer: whiteId,
+    blackPlayer: blackId,
+    format: format,
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    turn: 'w',
+    whiteTimeRemaining: t,
+    blackTimeRemaining: t,
+    lastMoveTimestamp: now,
+    moves: JSON.stringify([]),
+    status: 'in-progress'
+  });
+}
 
-const createGame = async (gameId, playerWhiteId, playerBlackId) => {
-    const gameState = {
-        playerWhite: playerWhiteId,
-        playerBlack: playerBlackId,
-        fen: STARTING_FEN,
-        turn: 'w',
-        status: 'active'
-    };
-    await redis.hSet(`game:${gameId}`,gameState);
-    await redis.expire(`game:${gameId}`,86400);
-    return gameState;
-};
+async function getGameState(gameId) {
+  const s = await redis.hgetall(`game:${gameId}`);
+  if (!s || Object.keys(s).length === 0) return null;
+  return {
+    ...s,
+    whiteTimeRemaining: parseInt(s.whiteTimeRemaining, 10),
+    blackTimeRemaining: parseInt(s.blackTimeRemaining, 10),
+    lastMoveTimestamp: parseInt(s.lastMoveTimestamp, 10),
+    moves: JSON.parse(s.moves || '[]')
+  };
+}
 
-const getGame = async(gameId) => {
-    const state = await redis.hGetAll(`game:${gameId}`);
-    if(Object.keys(state).length === 0) return null;
-    return state;
-};
+async function updateGameState(gameId, updates) {
+  if (updates.moves) updates.moves = JSON.stringify(updates.moves);
+  await redis.hset(`game:${gameId}`, updates);
+}
 
-const updateMove = async (gameId, newFen, nextTurn) => {
-    await redis.hSet(`game:${gameId}`,{
-        fen: newFen,
-        turn: nextTurn
-    });
-};
+async function deleteGameState(gameId) {
+  await redis.del(`game:${gameId}`);
+}
 
-const deleteGame = async (gameId) => {
-    await redis.del(`game:${gameId}`);
-};
-
-module.exports = { createGame, getGame, updateMove, deleteGame };
+module.exports = { initGameState, getGameState, updateGameState, deleteGameState, TIMES };

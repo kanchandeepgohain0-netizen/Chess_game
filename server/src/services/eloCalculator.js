@@ -1,17 +1,12 @@
-const calculateElo = (ratingA, ratingB, scoreA) => {
-    const k = 32;
-    const expectA = 1/ (1 + Math.pow(10, (ratingB - ratingA) / 400));
-    const expectB = 1/ (1 + Math.pow(10, (ratingB - ratingA) / 400));
+function calculateElo(ratingA, ratingB, scoreA) {
+  const K = 32;
+  const expectedA = 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
+  const expectedB = 1 / (1 + Math.pow(10, (ratingA - ratingB) / 400));  
+  
+  const changeA = Math.round(K * (scoreA - expectedA));
+  const changeB = Math.round(K * ((1 - scoreA) - expectedB));
 
-    const scoreB = 1 - scoreA;
+  return { changeA, changeB };
+}
 
-    const newRatingA = ratingA + k * (scoreA - expectA);
-    const newRatingB = ratingB + k * (scoreB - expectB);
-
-    return{
-        newRatingA: Math.round(newRatingA),
-        newRatingB: Math.round(newRatingB)
-    };
-};
-
-module.exports = { calculateElo};
+module.exports = { calculateElo };

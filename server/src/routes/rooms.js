@@ -6,12 +6,13 @@ const Room = require('../models/Room');
 // POST /api/rooms/create
 router.post('/create', authMiddleware, async (req, res) => {
     try {
-        const { password } = req.body;
+        const { password, format } = req.body;
 
         const newRoom = await Room.create({
             host: req.user.id,
-            whitePlayer: req.user.id,  
+            whitePlayer: req.user.id,
             password: password || '',
+            format: format || 'rapid',
         });
 
         res.status(201).json({ roomId: newRoom.roomId });  
@@ -30,7 +31,7 @@ router.post('/join', authMiddleware, async (req, res) => {
         if (!room) {
             return res.status(404).json({ error: 'Room not found.' });
         }
-        if (room.password !== password) {
+        if (room.password && room.password !== password) {
             return res.status(401).json({ error: 'Incorrect room password.' });
         }
 

@@ -3,8 +3,6 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { error } = require('node:console');
-
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 router.post('/register', async(req,res) =>{

@@ -1,72 +1,112 @@
-const User = require('../models/User');
 const Game = require('../models/Game');
-
+const User = require('../models/User');
+const Room = require('../models/Room');
+const redis = require('../config/redis');
+const { getGameState, deleteGameState } = require('./gameState');
 const { calculateElo } = require('./eloCalculator');
 
-const { getGame, deleteGame } = require('./gameState');
+async function endGame(io, gameId, status, winnerId) {
+  try {
+    const state = await getGameState(gameId);
+    if (!state) return;
+    await redis.hset(`game:${gameId}`, 'status', 'ended');
 
-const processMatchEnd = async (gameId, winnerId, loserId, isDraw = false, endStatus = 'checkmate') => {
-    try{
-        const finalState = await getGame(gameId);
-        if(!finalState) throw new error('Game state not found in Redis');
 
-        const winner = await User.findById(winnerId);
-        const loser = await User.findById(loserId);
+    const botData = await redis.hgetall(`bot:${gameId}`);
+    const isBotGame = botData && botData.active === 'true';
 
-        const score = isDraw ? 0.5 : 1;
-        const {newRatingA: newWinnerElo, newRatingB: newLoserElo} = calculateElo(winner.elo, loser.elo, score);
+    const whiteUser = state.whitePlayer.startsWith('bot_') ? null : await User.findById(state.whitePlayer);
+    const blackUser = state.blackPlayer.startsWith('bot_') ? null : await User.findById(state.blackPlayer);
 
-        const winnerEloChange = newWinnerElo - winner.elo;
-        const loserEloChange = newLoserElo - loser.elo;
-        winner.elo = newWinnerElo;
-        loser.elo = newLoserElo;
 
-        if(isDraw){
-            winner.draws += 1;
-            loser.draws += 1;
-        }else{
-            winner.wins += 1;
-            loser.losses += 1;
-        }
+    const humanUser = isBotGame ? (whiteUser || blackUser) : null;
 
-        const whitePlayerId = finalState.playerWhite;
-        const blackPlayerId = finalState.playerBlack;
+    if (!isBotGame && (!whiteUser || !blackUser)) return;
+    if (isBotGame && !humanUser) return;
 
-        const whiteEloChange = winnerId.toString() === whitePlayerId ? winnerEloChange : loserEloChange;
-        const blackEloChange = winnerId.toString() === blackPlayerId ? winnerEloChange : loserEloChange;
+    let wChange = 0, bChange = 0;
+    if (!isBotGame) {
+      if (['checkmate', 'timeout', 'resignation'].includes(status)) {
+        const whiteWon = winnerId === state.whitePlayer;
+        const r = calculateElo(whiteUser.elo, blackUser.elo, whiteWon ? 1 : 0);
+        wChange = r.changeA;
+        bChange = r.changeB;
+      } else {
+        const r = calculateElo(whiteUser.elo, blackUser.elo, 0.5);
+        wChange = r.changeA;
+        bChange = r.changeB;
+      }
+    } else {
 
-        const gameRecord = await Game.create({
-            whitePlayer: whitePlayerId,
-            blackPlayer: blackPlayerId,
-            winner: isDraw ? null : winnerId,
-            format: finalState.format || 'blitz',
-            status: isDraw ? 'draw-agreement' : endStatus,
-            moves: JSON.parse(finalState.moves || '[]'),
-            currentFen: finalState.fen,
-            whiteTimeRemaining: parseInt(finalState.whiteTimeRemaining) || 0,
-            blackTimeRemaining: parseInt(finalState.blackTimeRemaining) || 0,
-            whiteEloChange: whiteEloChange,
-            blackEloChange: blackEloChange,
-            room: finalState.roomId || null
-        });
-
-        winner.matchHistory.push(gameRecord._id);
-        loser.matchHistory.push(gameRecord._id);
-
-        await winner.save();
-        await loser.save();
-
-        await deleteGame(gameId);
-
-        return{
-            winner: {id: winner._id, newElo: newWinnerElo, eloChange: winnerEloChange},
-            loser: {id: loser._id, newElo: newLoserElo, eloChange: loserEloChange}
-        };
-
-    }catch(err){
-        console.error('Error processing game end:', err);
-        throw err;
+      const botElo = parseInt(botData.botElo, 10) || 1200;
+      const humanIsWhite = state.whitePlayer !== botData.botId;
+      const humanElo = humanUser.elo;
+      const humanWon = winnerId && winnerId !== botData.botId;
+      const scoreForHuman = !winnerId ? 0.5 : humanWon ? 1 : 0;
+      const r = calculateElo(humanElo, botElo, scoreForHuman);
+      if (humanIsWhite) { wChange = r.changeA; } else { bChange = r.changeA; }
     }
-};
 
-module.exports = { processMatchEnd };
+    const game = await Game.create({
+      whitePlayer: isBotGame
+        ? (state.whitePlayer === botData.botId ? state.blackPlayer : state.whitePlayer)
+        : state.whitePlayer,
+      blackPlayer: isBotGame
+        ? (state.blackPlayer === botData.botId ? state.whitePlayer : state.blackPlayer)
+        : state.blackPlayer,
+      format: state.format,
+      status: status,
+      moves: state.moves,
+      currentFen: state.fen,
+      whiteTimeRemaining: state.whiteTimeRemaining,
+      blackTimeRemaining: state.blackTimeRemaining,
+      whiteEloChange: wChange,
+      blackEloChange: bChange
+    });
+
+    if (!isBotGame) {
+
+        await User.findByIdAndUpdate(state.whitePlayer, {
+        $inc: { elo: wChange, wins: winnerId === state.whitePlayer ? 1 : 0, losses: winnerId === state.blackPlayer ? 1 : 0, draws: !winnerId ? 1 : 0 },
+        $push: { matchHistory: game._id }
+      });
+      await User.findByIdAndUpdate(state.blackPlayer, {
+        $inc: { elo: bChange, wins: winnerId === state.blackPlayer ? 1 : 0, losses: winnerId === state.whitePlayer ? 1 : 0, draws: !winnerId ? 1 : 0 },
+        $push: { matchHistory: game._id }
+      });
+    } else {
+
+      const humanIsWhite = state.whitePlayer !== botData.botId;
+      const humanId = humanIsWhite ? state.whitePlayer : state.blackPlayer;
+      const humanEloChange = humanIsWhite ? wChange : bChange;
+      const humanWon = winnerId && winnerId !== botData.botId;
+      await User.findByIdAndUpdate(humanId, {
+        $inc: {
+          elo: humanEloChange,
+          wins: humanWon ? 1 : 0,
+          losses: !winnerId ? 0 : humanWon ? 0 : 1,
+          draws: !winnerId ? 1 : 0
+        },
+        $push: { matchHistory: game._id }
+      });
+    }
+
+    io.to(gameId).emit('game_over', { status, winner: winnerId, wEloChange: wChange, bEloChange: bChange, gameId });
+    await deleteGameState(gameId);
+    await redis.del(`bot:${gameId}`);
+
+    // Clean up custom room if one exists for these players
+    if (!isBotGame) {
+      await Room.findOneAndDelete({
+        $or: [
+          { whitePlayer: state.whitePlayer, blackPlayer: state.blackPlayer },
+          { whitePlayer: state.blackPlayer, blackPlayer: state.whitePlayer }
+        ]
+      }).catch(() => {}); // non-fatal
+    }
+  } catch (err) {
+    console.error('endGame error:', err);
+  }
+}
+
+module.exports = { endGame };
