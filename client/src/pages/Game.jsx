@@ -8,6 +8,8 @@ function Game({ navigateTo, gameMode }) {
     const myColor = localStorage.getItem('myColor') || 'white';
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isBotGame = localStorage.getItem('isBotGame') === 'true';
+    const activeRoomId = localStorage.getItem('roomId');
+    const [activeGameId, setActiveGameId] = useState(localStorage.getItem('gameId'));
     
     const handleLocalMove = (move) => {
         // Both bot games and multiplayer games use server-side make_move flow
@@ -87,7 +89,6 @@ function Game({ navigateTo, gameMode }) {
         });
 
         // Join the game socket room so server can push events to us
-        const activeGameId = localStorage.getItem('gameId');
         if (activeGameId) {
             if (!socket.connected) socket.connect();
             socket.emit('register_user', { userId: user.userId });
@@ -97,7 +98,28 @@ function Game({ navigateTo, gameMode }) {
         return () => {
             socket.off('board_update');
         };
-    }, [isBotGame, myColor]);
+    }, [isBotGame, myColor, activeGameId]);
+
+    useEffect(() => {
+        const handleRoomReady = ({ gameId, white, black, format }) => {
+            console.log('Room ready on client! Game ID:', gameId);
+            localStorage.setItem('gameId', gameId);
+            setActiveGameId(gameId);
+        };
+
+        socket.on('room_ready', handleRoomReady);
+
+        // Join room if we have roomId but no gameId yet (waiting lobby state)
+        if (activeRoomId && !activeGameId) {
+            if (!socket.connected) socket.connect();
+            socket.emit('register_user', { userId: user.userId });
+            socket.emit('join_room', { roomId: activeRoomId, userId: user.userId });
+        }
+
+        return () => {
+            socket.off('room_ready', handleRoomReady);
+        };
+    }, [activeRoomId, activeGameId]);
 
     useEffect(() => {
         if (isBotGame) return;
@@ -145,6 +167,16 @@ function Game({ navigateTo, gameMode }) {
 
     const handleConfirmQuit = () => {
         setShowQuitModal(false);
+        localStorage.removeItem('roomId');
+        localStorage.removeItem('gameId');
+        localStorage.removeItem('isBotGame');
+        navigateTo('home');
+    };
+
+    const handleReturnHome = () => {
+        localStorage.removeItem('roomId');
+        localStorage.removeItem('gameId');
+        localStorage.removeItem('isBotGame');
         navigateTo('home');
     };
 
@@ -161,6 +193,38 @@ function Game({ navigateTo, gameMode }) {
 
         const isMyTurnNow = (myColor === 'white' && turn === 'w') || (myColor === 'black' && turn === 'b');
     const winnerName = turn === 'w' ? opponent.name : player.name;
+
+    // Custom room lobby state
+    if (activeRoomId && !activeGameId) {
+        return (
+            <div className={styles.lobbyContainer}>
+                <div className={styles.lobbyCard}>
+                    <h2>Custom Room Lobby</h2>
+                    <div className={styles.roomCodeSection}>
+                        <span className={styles.roomCodeLabel}>Room Code:</span>
+                        <span className={styles.roomCodeValue}>{activeRoomId}</span>
+                        <button 
+                            onClick={() => {
+                                navigator.clipboard.writeText(activeRoomId);
+                                alert('Room Code copied to clipboard!');
+                            }}
+                            className={styles.copyButton}
+                        >
+                            Copy
+                        </button>
+                    </div>
+                    <p className={styles.lobbyStatus}>Waiting for opponent to join...</p>
+                    <div className={styles.spinner}></div>
+                    <button 
+                        onClick={handleReturnHome}
+                        className={styles.cancelLobbyButton}
+                    >
+                        Leave Room
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>
@@ -278,7 +342,7 @@ function Game({ navigateTo, gameMode }) {
                         <div className={styles.modalButtons} style={{ justifyContent: 'center' }}>
                             <button
                                 className={`${styles.modalButton} ${styles.confirmBtn}`}
-                                onClick={() => navigateTo('home')}
+                                onClick={handleReturnHome}
                             >
                                 Return to Homepage
                             </button>

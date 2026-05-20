@@ -205,3 +205,113 @@
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
 }
+
+.lobbyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.lobbyCard {
+  background: rgba(40, 50, 65, 0.95);
+  border: 2px solid rgba(184, 134, 11, 0.5);
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 450px;
+  width: 100%;
+  padding: 40px;
+  text-align: center;
+  color: #e0e0e0;
+  backdrop-filter: blur(10px);
+}
+
+.lobbyCard h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 25px;
+  color: #b8860b;
+}
+
+.roomCodeSection {
+  background: rgba(20, 30, 40, 0.6);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  padding: 15px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.roomCodeLabel {
+  font-size: 14px;
+  color: #a0a0a0;
+  font-weight: 600;
+}
+
+.roomCodeValue {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffd700;
+  letter-spacing: 1px;
+}
+
+.copyButton {
+  background: rgba(184, 134, 11, 0.2);
+  color: #ffd700;
+  border: 1px solid rgba(184, 134, 11, 0.4);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copyButton:hover {
+  background: rgba(184, 134, 11, 0.4);
+  border-color: #ffd700;
+}
+
+.lobbyStatus {
+  font-size: 15px;
+  color: #ffd700;
+  margin-bottom: 25px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(184, 134, 11, 0.1);
+  border-top: 4px solid #b8860b;
+  border-radius: 50%;
+  margin: 0 auto 35px auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.cancelLobbyButton {
+  background: rgba(220, 38, 38, 0.8);
+  color: white;
+  border: 1px solid #ef4444;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.cancelLobbyButton:hover {
+  background: #ef4444;
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+}
