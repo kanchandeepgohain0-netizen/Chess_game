@@ -60,21 +60,26 @@ module.exports = (io, socket) => {
 
       const timer = setTimeout(async () => {
         try {
-
+          console.log(`[Matchmaking] Fallback timer fired for user: ${userId}`);
           const queueTime = await getQueueTime(userId);
-          if (!queueTime) return;
+          console.log(`[Matchmaking] Queue time check for ${userId}: ${queueTime}`);
+          if (!queueTime) {
+            console.log(`[Matchmaking] Aborting fallback for ${userId}: user not in queue or queue time missing`);
+            return;
+          }
 
           await removeFromQueue(userId);
 
           const { botId, botElo } = await findBotOpponent(elo);
+          console.log(`[Matchmaking] Generated bot opponent: ${botId} with ELO ${botElo}`);
 
           const gameId = uuidv4();
           const isWhite = Math.random() > 0.5;
           const whiteId = isWhite ? userId : botId;
           const blackId = isWhite ? botId : userId;
 
+          console.log(`[Matchmaking] Initializing bot game state for gameId: ${gameId}`);
           await initGameState(gameId, whiteId, blackId, format);
-
 
           await redis.hset(`bot:${gameId}`, {
             botId,
@@ -98,11 +103,12 @@ module.exports = (io, socket) => {
 
           botTimers.delete(userId);
         } catch (err) {
-          console.error('bot_fallback timer error:', err);
+          console.error('[Matchmaking] bot_fallback timer error:', err);
         }
       }, 30000); // 30 seconds
 
       botTimers.set(userId, timer);
+      console.log(`[Matchmaking] Fallback bot timer registered for user ${userId} (30s)`);
 
     } catch (err) {
       console.error('find_match error:', err);

@@ -4,9 +4,10 @@ import styles from './Home.module.css';
 function Home({ navigateTo }) {
   const [hoveredButton, setHoveredButton] = useState(null);
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const player = {
-    username: "Player_01",
-    elo: 1200
+    username: user.username || "Player_01",
+    elo: user.elo || 1200
   };
 
   return (
