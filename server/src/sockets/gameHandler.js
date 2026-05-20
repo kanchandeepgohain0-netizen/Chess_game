@@ -12,6 +12,17 @@ async function makeBotMove(io, gameId, fen, botId) {
     const botData = await redis.hgetall(`bot:${gameId}`);
     const botElo = botData ? parseInt(botData.botElo, 10) : null;
 
+    // Safety: Verify it is still the bot's turn based on the current database state
+    const currentChess = new Chess(state.fen);
+    const isBotTurnNow = botData && (
+      (botData.botColor === 'white' && currentChess.turn() === 'w') ||
+      (botData.botColor === 'black' && currentChess.turn() === 'b')
+    );
+    if (!isBotTurnNow) {
+      console.log(`[Bot] Aborting duplicate bot move for game ${gameId}: not bot's turn anymore`);
+      return;
+    }
+
     const uci = await getBestMove(fen, 12, botElo);
     const from = uci.slice(0, 2);
     const to   = uci.slice(2, 4);
@@ -80,8 +91,30 @@ async function makeBotMove(io, gameId, fen, botId) {
 
 module.exports = (io, socket) => {
 
-  socket.on('join_game', ({ gameId }) => {
+  socket.on('join_game', async ({ gameId }) => {
     socket.join(gameId);
+
+    // Automatically trigger bot move if it is the bot's turn (handles starting first move & reconnects)
+    try {
+      const botData = await redis.hgetall(`bot:${gameId}`);
+      if (botData && botData.active === 'true') {
+        const state = await getGameState(gameId);
+        if (state && state.status === 'in-progress') {
+          const chess = new Chess(state.fen);
+          const isBotTurn =
+            (botData.botColor === 'white' && chess.turn() === 'w') ||
+            (botData.botColor === 'black' && chess.turn() === 'b');
+          
+          if (isBotTurn) {
+            console.log(`[Bot] Player joined game ${gameId}. Triggering bot's turn...`);
+            const delay = 1000 + Math.random() * 1000;
+            setTimeout(() => makeBotMove(io, gameId, chess.fen(), botData.botId), delay);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Bot] Error triggering bot move on join_game:', err);
+    }
   });
 
   socket.on('make_move', async ({ gameId, move, userId }) => {
