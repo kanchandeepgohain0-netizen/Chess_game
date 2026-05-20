@@ -10,13 +10,12 @@ function Game({ navigateTo, gameMode }) {
     const isBotGame = localStorage.getItem('isBotGame') === 'true';
     
     const handleLocalMove = (move) => {
-        if (!isBotGame) {
-            socket.emit('make_move', {
-                gameId: localStorage.getItem('gameId'),
-                move,
-                userId: user.userId
-            });
-        }
+        // Both bot games and multiplayer games use server-side make_move flow
+        socket.emit('make_move', {
+            gameId: localStorage.getItem('gameId'),
+            move,
+            userId: user.userId
+        });
     };
 
     const { board, legalMoves, onSquareClick, applyMove, turn, isCheckmate, checkmateSquare, game } = useChessGame(myColor, handleLocalMove);
@@ -59,58 +58,46 @@ function Game({ navigateTo, gameMode }) {
     }, [turn, hasTimer, isCheckmate, myColor]);
 
 
+    // NOTE: Bot games (ranked) use the server-side make_move → board_update flow.
+    // The server's gameHandler.js automatically calls makeBotMove after the player moves.
+    // The computer_move/computer_response flow is only used for Tutorial mode.
+
+
     useEffect(() => {
-        if (!isBotGame || isCheckmate) return;
-        const isBotTurn = (myColor === 'white' && turn === 'b') || (myColor === 'black' && turn === 'w');
-        if (!isBotTurn) return;
+        // Show bot thinking indicator when it's bot's turn
+        if (isBotGame) {
+            const isBotTurn = (myColor === 'white' && turn === 'b') || (myColor === 'black' && turn === 'w');
+            setIsBotThinking(isBotTurn);
+        }
+    }, [turn, isBotGame, myColor]);
 
-
-        botTimerRef.current = setTimeout(() => {
-            const currentFen = game.fen();
-            setIsBotThinking(true);
-            console.log("Emitting computer_move with fen:", currentFen, "socket connected:", socket.connected);
-            // Make sure socket is live before emitting
-            const emit = () => socket.emit('computer_move', { fen: currentFen, depth: botDepth });
-            if (socket.connected) {
-                emit();
-            } else {
-                console.log("Socket disconnected! Reconnecting...");
-                socket.connect();
-                socket.once('connect', emit);
+    useEffect(() => {
+        // Both bot and multiplayer games need board_update for server-synced state
+        socket.on('board_update', ({ fen, whiteTime, blackTime, lastMove }) => {
+            const isWhite = myColor === 'white';
+            if (whiteTime !== undefined && blackTime !== undefined) {
+                setPlayerTime(isWhite ? Math.floor(whiteTime / 1000) : Math.floor(blackTime / 1000));
+                setOpponentTime(isWhite ? Math.floor(blackTime / 1000) : Math.floor(whiteTime / 1000));
             }
-        }, 800);
-
-        return () => clearTimeout(botTimerRef.current);
-    }, [turn, isBotGame, isCheckmate, myColor, botDepth]); 
-
-
-    useEffect(() => {
-        if (!isBotGame) return;
-
-        socket.on('computer_response', ({ bestMove }) => {
             setIsBotThinking(false);
-            if (!bestMove || isCheckmate) return;
-
-            const from = bestMove.slice(0, 2);
-            const to   = bestMove.slice(2, 4);
-            const promotion = bestMove.length > 4 ? bestMove[4] : 'q';
-
-            console.log(`🤖 Bot plays: ${bestMove}`);
-            const applied = applyMove(from, to, promotion);
-            if (!applied) console.warn('Bot move was rejected by chess.js:', bestMove);
+            if (game.fen() !== fen && lastMove) {
+                const { from, to, promotion } = lastMove;
+                applyMove(from, to, promotion || 'q');
+            }
         });
 
-        socket.on('error_event', ({ message }) => {
-            setIsBotThinking(false);
-            console.error('Bot engine error:', message);
-        });
+        // Join the game socket room so server can push events to us
+        const activeGameId = localStorage.getItem('gameId');
+        if (activeGameId) {
+            if (!socket.connected) socket.connect();
+            socket.emit('register_user', { userId: user.userId });
+            socket.emit('join_game', { gameId: activeGameId });
+        }
 
         return () => {
-            socket.off('computer_response');
-            socket.off('error_event');
+            socket.off('board_update');
         };
-    }, [isBotGame]); 
-
+    }, [isBotGame, myColor]);
 
     useEffect(() => {
         if (isBotGame) return;
@@ -142,30 +129,10 @@ function Game({ navigateTo, gameMode }) {
             try { game.load(fen); } catch(e) { console.warn('FEN resync failed', e); }
         });
 
-        socket.on('board_update', ({ fen, whiteTime, blackTime, turn, lastMove }) => {
-            const isWhite = myColor === 'white';
-            setPlayerTime(isWhite ? Math.floor(whiteTime / 1000) : Math.floor(blackTime / 1000));
-            setOpponentTime(isWhite ? Math.floor(blackTime / 1000) : Math.floor(whiteTime / 1000));
-            
-            if (game.fen() !== fen && lastMove) {
-                const { from, to, promotion } = lastMove;
-                applyMove(from, to, promotion || 'q');
-            }
-        });
-
-        // Join the game socket room (safety net for reconnects/refreshes)
-        const activeGameId = localStorage.getItem('gameId');
-        if (activeGameId) {
-            if (!socket.connected) socket.connect();
-            socket.emit('register_user', { userId: user.userId });
-            socket.emit('join_game', { gameId: activeGameId });
-        }
-
         return () => {
             socket.off('opponent_disconnected');
             socket.off('opponent_reconnected');
             socket.off('player_reconnect');
-            socket.off('board_update');
             clearInterval(disconnectTimerRef.current);
         };
     }, [isBotGame, myColor]);
