@@ -5,11 +5,20 @@ const { getBestMove } = require('../services/stockfishEngine');
 const redis = require('../config/redis');
 
 async function makeBotMove(io, gameId, fen, botId) {
+  console.log(`[Bot] makeBotMove called. GameId: ${gameId}, BotId: ${botId}, FEN: "${fen}"`);
   try {
     const state = await getGameState(gameId);
-    if (!state || state.status !== 'in-progress') return;
+    if (!state) {
+      console.warn(`[Bot] Aborting: Game state not found for game ${gameId}`);
+      return;
+    }
+    if (state.status !== 'in-progress') {
+      console.warn(`[Bot] Aborting: Game status is "${state.status}" (not in-progress) for game ${gameId}`);
+      return;
+    }
 
     const botData = await redis.hgetall(`bot:${gameId}`);
+    console.log(`[Bot] botData retrieved from Redis: ${JSON.stringify(botData)}`);
     const botElo = botData ? parseInt(botData.botElo, 10) : null;
 
     // Safety: Verify it is still the bot's turn based on the current database state
@@ -18,12 +27,15 @@ async function makeBotMove(io, gameId, fen, botId) {
       (botData.botColor === 'white' && currentChess.turn() === 'w') ||
       (botData.botColor === 'black' && currentChess.turn() === 'b')
     );
+    console.log(`[Bot] Turn check: current chess turn="${currentChess.turn()}", bot color="${botData?.botColor}", isBotTurnNow=${isBotTurnNow}`);
     if (!isBotTurnNow) {
       console.log(`[Bot] Aborting duplicate bot move for game ${gameId}: not bot's turn anymore`);
       return;
     }
 
+    console.log(`[Bot] Invoking getBestMove at depth=12, elo=${botElo}...`);
     const uci = await getBestMove(fen, 12, botElo);
+    console.log(`[Bot] getBestMove returned UCI move: "${uci}"`);
     const from = uci.slice(0, 2);
     const to   = uci.slice(2, 4);
     const promotion = uci.length > 4 ? uci[4] : undefined;
@@ -32,13 +44,15 @@ async function makeBotMove(io, gameId, fen, botId) {
     let result;
     try {
       result = chess.move({ from, to, promotion });
-    } catch {
+    } catch (err) {
+      console.error(`[Bot] Move parsing exception:`, err);
       result = null;
     }
     if (!result) {
-      console.error(`Bot illegal move ${uci} for fen ${fen}`);
+      console.error(`[Bot] Bot illegal move ${uci} for fen ${fen}`);
       return;
     }
+    console.log(`[Bot] Bot move validated successfully: ${result.san}`);
 
     const now = Date.now();
     const elapsed = now - state.lastMoveTimestamp;
@@ -92,18 +106,22 @@ async function makeBotMove(io, gameId, fen, botId) {
 module.exports = (io, socket) => {
 
   socket.on('join_game', async ({ gameId }) => {
+    console.log(`[Socket] join_game event received for gameId: ${gameId} by socket: ${socket.id}`);
     socket.join(gameId);
 
     // Automatically trigger bot move if it is the bot's turn (handles starting first move & reconnects)
     try {
       const botData = await redis.hgetall(`bot:${gameId}`);
+      console.log(`[Bot] join_game botData retrieved: ${JSON.stringify(botData)}`);
       if (botData && botData.active === 'true') {
         const state = await getGameState(gameId);
+        console.log(`[Bot] join_game gameState status: ${state?.status}, FEN: "${state?.fen}"`);
         if (state && state.status === 'in-progress') {
           const chess = new Chess(state.fen);
           const isBotTurn =
             (botData.botColor === 'white' && chess.turn() === 'w') ||
             (botData.botColor === 'black' && chess.turn() === 'b');
+          console.log(`[Bot] join_game isBotTurn check: ${isBotTurn}`);
           
           if (isBotTurn) {
             console.log(`[Bot] Player joined game ${gameId}. Triggering bot's turn...`);
@@ -118,9 +136,13 @@ module.exports = (io, socket) => {
   });
 
   socket.on('make_move', async ({ gameId, move, userId }) => {
+    console.log(`[Socket] make_move event received for gameId: ${gameId}, userId: ${userId}, move: ${JSON.stringify(move)}`);
     try {
       const state = await getGameState(gameId);
-      if (!state || state.status !== 'in-progress') return;
+      if (!state || state.status !== 'in-progress') {
+        console.warn(`[Socket] make_move ignored: Game state missing or status is not in-progress.`);
+        return;
+      }
 
       const isWhiteTurn = state.turn === 'w';
       const isWhite = userId === state.whitePlayer;
@@ -184,14 +206,16 @@ module.exports = (io, socket) => {
 
 
       const botData = await redis.hgetall(`bot:${gameId}`);
+      console.log(`[Bot] make_move bot check: botData=${JSON.stringify(botData)}, active=${botData?.active}, chessTurn=${chess.turn()}`);
       if (botData && botData.active === 'true') {
         const isBotTurn =
           (botData.botColor === 'white' && chess.turn() === 'w') ||
           (botData.botColor === 'black' && chess.turn() === 'b');
+        console.log(`[Bot] make_move isBotTurn: ${isBotTurn}`);
 
         if (isBotTurn) {
-
           const delay = 800 + Math.random() * 1200;
+          console.log(`[Bot] Scheduling bot move for game ${gameId} with delay ${Math.round(delay)}ms`);
           setTimeout(() => makeBotMove(io, gameId, chess.fen(), botData.botId), delay);
         }
       }
