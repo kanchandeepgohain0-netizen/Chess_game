@@ -16,9 +16,10 @@ function Matchmaking({ navigateTo, gameMode }) {
     avatar: '👤'
   };
 
+  const [connectionStatus, setConnectionStatus] = useState(socket.connected ? 'connected' : 'connecting');
+
   useEffect(() => {
     const emitFindMatch = () => {
-
       if (user.userId) {
         socket.emit('register_user', { userId: user.userId });
       }
@@ -29,12 +30,28 @@ function Matchmaking({ navigateTo, gameMode }) {
       });
     };
 
+    const handleConnect = () => {
+      setConnectionStatus('connected');
+      emitFindMatch();
+    };
+
+    const handleConnectError = (err) => {
+      console.error('Matchmaking connection error:', err);
+      setConnectionStatus('error');
+    };
+
+    const handleDisconnect = () => {
+      setConnectionStatus('disconnected');
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('connect_error', handleConnectError);
+    socket.on('disconnect', handleDisconnect);
 
     if (!socket.connected) {
       socket.connect();
-      socket.once('connect', emitFindMatch);
     } else {
-      emitFindMatch();
+      handleConnect();
     }
 
     const timerInterval = setInterval(() => {
@@ -71,6 +88,9 @@ function Matchmaking({ navigateTo, gameMode }) {
 
     return () => {
       clearInterval(timerInterval);
+      socket.off('connect', handleConnect);
+      socket.off('connect_error', handleConnectError);
+      socket.off('disconnect', handleDisconnect);
       socket.off('match_found');
       socket.off('error_event');
     };
@@ -94,14 +114,36 @@ function Matchmaking({ navigateTo, gameMode }) {
       <header className={styles.header}>
         <button className={styles.cancelButton} onClick={handleCancel}>✕</button>
         <h2 className={styles.title}>
-          {searching
-            ? 'Finding Opponent...'
-            : isBotMatch
-              ? 'No Opponent Found — Matched with Bot!'
-              : 'Match Found!'}
+          {connectionStatus === 'error'
+            ? 'Connection Error!'
+            : connectionStatus === 'connecting'
+              ? 'Connecting to Server...'
+              : searching
+                ? 'Finding Opponent...'
+                : isBotMatch
+                  ? 'No Opponent Found — Matched with Bot!'
+                  : 'Match Found!'}
         </h2>
         <div className={styles.formatBadge}>{formatDisplay}</div>
       </header>
+
+      {connectionStatus === 'error' && (
+        <div className={styles.connectionAlert} style={{
+          backgroundColor: '#ff4d4d',
+          color: '#ffffff',
+          padding: '10px 15px',
+          borderRadius: '8px',
+          textAlign: 'center',
+          margin: '15px auto',
+          maxWidth: '450px',
+          fontSize: '0.85rem',
+          fontWeight: 'bold',
+          lineHeight: '1.4',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+        }}>
+          ⚠️ Socket server connection failed. Please verify your VITE_SERVER_URL and CLIENT_URL configurations.
+        </div>
+      )}
 
       <main className={styles.main}>
         <div className={styles.matchmakingContent}>
