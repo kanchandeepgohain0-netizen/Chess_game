@@ -6,8 +6,7 @@ function Home({ navigateTo }) {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const player = {
-    username: user.username || "Player_01",
-    elo: user.elo || 1200
+    username: user.username || "Profile",
   };
 
   return (
